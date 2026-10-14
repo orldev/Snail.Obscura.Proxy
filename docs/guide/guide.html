@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Obscura — инструкция по установке</title>
+<!-- Fonts (static TTFs from fonts/) are inlined by build.mjs as data URIs: Google web fonts come
+     as subsets and variable files, and when printing Chromium replaced them with Courier and Times,
+     while a file:// page can't load a font from disk because of CORS. -->
+<style>
+  :root {
+    --ink: #14171c;
+    --muted: #5b6472;
+    --faint: #8a929e;
+    --line: #e2e5ea;
+    --paper: #ffffff;
+    --tint: #f5f7f6;
+    --accent: #1f7a4d;
+    --accent-ink: #145a38;
+    --accent-soft: #e6f2eb;
+    --warn: #8a5a00;
+    --warn-soft: #fff4dc;
+    --danger: #b3261e;
+    --term: #10161d;
+    --term-ink: #dfe7ef;
+    --term-dim: #7c8a99;
+    --term-green: #7ee2a8;
+  }
+  @page { size: A4; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 10.5pt/1.55 'Golos Text', system-ui, sans-serif;
+    font-feature-settings: 'kern', 'liga';
+  }
+  h1, h2, h3 { line-height: 1.2; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: 19pt; }
+  h3 { font-size: 12pt; margin: 18px 0 6px; font-weight: 600; }
+  p { margin: 0 0 9px; }
+  ul, ol { margin: 0 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  li::marker { color: var(--accent); }
+  strong { font-weight: 600; }
+  a { color: var(--accent-ink); text-decoration: none; }
+  code {
+    font: 400 9pt 'Roboto Mono', ui-monospace, monospace;
+    background: var(--tint);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+  .muted { color: var(--muted); }
+
+  /* ── Cover ───────────────────────────────── */
+  .cover {
+    height: 263mm;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+  }
+  .cover .brand { display: flex; align-items: center; gap: 12px; }
+  .cover .brand img { width: 40px; height: 40px; }
+  .cover .brand span { font-weight: 700; font-size: 15pt; }
+  .cover h1 { font-size: 34pt; margin: 70px 0 14px; max-width: 14em; letter-spacing: -0.02em; }
+  .cover .lead { font-size: 13pt; color: var(--muted); max-width: 32em; }
+  .cover .scheme { margin: 50px 0 0; }
+  .scheme text { font-family: 'Golos Text', system-ui, sans-serif; }
+  .keep { break-inside: avoid; page-break-inside: avoid; }
+  .cover .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: auto; }
+  .cover .fact { border-top: 2px solid var(--accent); padding-top: 8px; }
+  .cover .fact b { display: block; font-size: 15pt; }
+  .cover .fact span { color: var(--muted); font-size: 9.5pt; }
+  .cover .meta { margin-top: 26px; color: var(--faint); font-size: 9pt; }
+
+  /* ── Sections and steps ──────────────────── */
+  section { page-break-inside: auto; }
+  .chapter { page-break-before: always; }
+  .step-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .step-no {
+    flex: none;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 15pt;
+  }
+  .step-head .when { color: var(--muted); font-size: 9.5pt; margin-top: 3px; }
+
+  .toc { margin: 18px 0 0; padding: 0; list-style: none; counter-reset: toc; }
+  .toc li { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .toc li b { color: var(--accent); width: 22px; }
+  .toc li span { color: var(--muted); margin-left: auto; font-size: 9.5pt; }
+
+  /* ── Blocks ──────────────────────────────── */
+  .note, .warn, .tip {
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 10px 0 12px;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  .note { background: var(--tint); }
+  .tip { background: var(--accent-soft); }
+  .warn { background: var(--warn-soft); }
+  .note > b:first-child, .tip > b:first-child, .warn > b:first-child { display: block; margin-bottom: 2px; }
+  .warn > b:first-child { color: var(--warn); }
+  .tip > b:first-child { color: var(--accent-ink); }
+
+  .term {
+    background: var(--term);
+    color: var(--term-ink);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 8px 0 12px;
+    font: 400 8.6pt/1.6 'Roboto Mono', ui-monospace, monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    page-break-inside: avoid;
+  }
+  .term .c { color: var(--term-dim); }
+  .term .hl { color: #fff; font-weight: 600; }
+  .term-label { font-size: 8.5pt; color: var(--muted); margin: 12px 0 -4px; font-weight: 500; }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 9.6pt; page-break-inside: auto; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 8.6pt; text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 8px; border-bottom: 1.5px solid var(--ink); }
+  td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  td:first-child { font-weight: 500; width: 34%; }
+
+  figure { margin: 10px 0 14px; page-break-inside: avoid; }
+  figure .frame {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(20, 23, 28, 0.06), 0 6px 18px rgba(20, 23, 28, 0.06);
+  }
+  figure img { display: block; width: 100%; }
+  figure.narrow .frame { width: 64mm; }
+  figure.w80 .frame { width: 80%; }
+  figure figcaption { font-size: 8.8pt; color: var(--muted); margin-top: 6px; }
+  .ring {
+    position: absolute;
+    border: 2.5px solid #e8590c;
+    border-radius: 8px;
+  }
+  .ring::after {
+    content: attr(data-n);
+    position: absolute;
+    top: -11px; right: -11px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #e8590c;
+    color: #fff;
+    font: 700 9pt/20px 'Golos Text', sans-serif;
+    text-align: center;
+  }
+  .side { display: grid; grid-template-columns: 64mm 1fr; gap: 18px; align-items: start; }
+  .side figure { margin-top: 0; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { padding-left: 24px; position: relative; }
+  .checklist li::before {
+    content: '';
+    position: absolute; left: 0; top: 4px;
+    width: 12px; height: 12px;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+  }
+  .kbd {
+    font: 600 8.6pt 'Roboto Mono', monospace;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 0 5px;
+    background: #fff;
+    white-space: nowrap;
+  }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; page-break-inside: avoid; }
+  .card h3 { margin-top: 0; }
+  /* Commands are copied out of the PDF, so the monospace font has no ligatures (Roboto Mono):
+     with ligature fonts // and && become one glyph and the terminal gets "https: /".
+     Ligatures can't be turned off via font-feature-settings: with it Chromium doesn't embed
+     the font in the PDF and prints the commands in Courier. */
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ COVER ════════════════════ -->
+<div class="cover">
+  <div class="brand"><img src="../../public/icon/128.png" alt=""><span>Obscura</span></div>
+  <h1>Свой прокси-сервер и переключатель для Chrome</h1>
+  <p class="lead">Инструкция для тех, кто делает это впервые: как арендовать сервер, поставить на него прокси одной командой и подключить браузер.</p>
+
+  <svg class="scheme" viewBox="0 0 640 150" width="100%" role="img" aria-label="Схема: браузер, зашифрованное соединение, ваш сервер, сайты">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1f7a4d"/></marker>
+      <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a929e"/></marker>
+    </defs>
+    <rect x="1" y="35" width="150" height="74" rx="12" fill="#f5f7f6" stroke="#e2e5ea"/>
+    <text x="76" y="68" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="15" fill="#14171c">Ваш Chrome</text>
+    <text x="76" y="90" text-anchor="middle" font-family="Golos Text" font-size="12" fill="#5b6472">+ расширение Obscura</text>
+
+    <line x1="158" y1="72" x2="318" y2="72" stroke="#1f7a4d" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="186" y="44" width="104" height="20" rx="10" fill="#e6f2eb"/>
+    <text x="238" y="58" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="11" fill="#145a38">зашифровано</text>
+    <text x="238" y="94" text-anchor="middle" font-family="Golos Text" font-size="11" fill="#5b6472">провайдер видит только</text>
+    <text x="238" y="109" text-anchor="middle" font-family="Golos Text" font-size="11" fill="#5b6472">адрес вашего сервера</text>
+
+    <rect x="326" y="35" width="150" height="74" rx="12" fill="#1f7a4d"/>
+    <text x="401" y="68" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="15" fill="#fff">Ваш сервер</text>
+    <text x="401" y="90" text-anchor="middle" font-family="Golos Text" font-size="12" fill="#d5ecdf">в нужной стране</text>
+
+    <line x1="483" y1="72" x2="560" y2="72" stroke="#8a929e" stroke-width="2" marker-end="url(#arrow-grey)"/>
+    <rect x="566" y="35" width="72" height="74" rx="12" fill="#fff" stroke="#e2e5ea"/>
+    <text x="602" y="77" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="14" fill="#14171c">Сайты</text>
+    <text x="401" y="138" text-anchor="middle" font-family="Golos Text" font-size="11" fill="#5b6472">сайты видят IP сервера, а не ваш</text>
+  </svg>
+
+  <div class="facts">
+    <div class="fact"><b>≈ 15 минут</b><span>от аренды сервера до работающего браузера</span></div>
+    <div class="fact"><b>от 3–6 $ в месяц</b><span>стоимость небольшого сервера; само расширение бесплатно</span></div>
+    <div class="fact"><b>1 команда</b><span>на сервере; логин и пароль придумываются сами</span></div>
+  </div>
+  <p class="meta">Версия 0.1 · октябрь 2026 · github.com/orldev/Snail.Obscura.Proxy</p>
+</div>
+
+<!-- ════════════════════ CONTENTS ════════════════════ -->
+<section>
+  <h2>Что вас ждёт</h2>
+  <p class="muted" style="margin-top:8px">Пять шагов. Первые три делаются один раз на каждый сервер, четвёртый — один раз на компьютер.</p>
+  <ol class="toc">
+    <li><b>1</b>Арендовать сервер с публичным IP-адресом<span>5 минут</span></li>
+    <li><b>2</b>Подключиться к серверу из терминала<span>2 минуты</span></li>
+    <li><b>3</b>Установить прокси одной командой<span>3 минуты</span></li>
+    <li><b>4</b>Добавить расширение в Chrome<span>3 минуты</span></li>
+    <li><b>5</b>Вставить строку подключения и выбрать сервер<span>1 минута</span></li>
+  </ol>
+
+  <h3 style="margin-top:26px">Что понадобится</h3>
+  <ul class="checklist">
+    <li>Компьютер с Google Chrome (Windows, macOS или Linux).</li>
+    <li>Банковская карта или другой способ оплаты, который принимает выбранный хостинг.</li>
+    <li>Около 15 минут. Программировать не нужно: все команды есть в этой инструкции, их достаточно скопировать.</li>
+  </ul>
+
+  <h3>Как это работает</h3>
+  <p>Вы арендуете небольшой сервер в той стране, из которой хотите «выходить» в интернет. На него ставится прокси: программа, которая открывает сайты от имени сервера. Расширение Obscura направляет трафик Chrome через этот сервер. Соединение между браузером и сервером зашифровано.</p>
+  <p>Серверов может быть несколько, например в Нидерландах, Германии и Финляндии. У каждого в расширении короткое имя (<b>NL</b>, <b>DE</b>, <b>FI</b>), и переключаться между ними можно одним кликом.</p>
+
+  <div class="note"><b>Что видно и кому</b>
+    Сайты видят IP-адрес вашего сервера. Ваш интернет-провайдер видит, что вы подключены к серверу, но не видит, какие сайты открываете. Хостинг, у которого вы арендуете сервер, видит имена сайтов, но не содержимое страниц: почти все сайты работают по HTTPS. Сервер не ведёт журнал посещённых адресов.
+  </div>
+</section>
+
+<!-- ════════════════════ STEP 1 ════════════════════ -->
+<section class="chapter">
+  <div class="step-head">
+    <div class="step-no">1</div>
+    <div><h2>Арендовать сервер</h2><div class="when">Один раз для каждого сервера · 5 минут</div></div>
+  </div>
+
+  <p>Нужен <b>VPS</b> — виртуальный сервер. Его продают сотни хостинговых компаний. Ищите по запросу «VPS» и названию нужной страны. Выбирайте компанию, которая принимает ваш способ оплаты и у которой есть дата-центр в нужной стране.</p>
+
+  <h3>Что выбрать при заказе</h3>
+  <table>
+    <tr><th>Параметр</th><th>Что выбрать</th></tr>
+    <tr><td>Операционная система</td><td><b>Ubuntu 24.04</b> (подойдёт и Ubuntu 22.04 или Debian 12). Без панелей управления и «приложений».</td></tr>
+    <tr><td>Процессор, память, диск</td><td>Самый дешёвый тариф: 1 ядро, 1 ГБ памяти, 10 ГБ диска — с запасом.</td></tr>
+    <tr><td>IP-адрес</td><td><b>Публичный («белый») IPv4</b>, выделенный только вам. У VPS он почти всегда входит в цену. Если тариф предлагает «только IPv6» или «NAT» — это не подходит.</td></tr>
+    <tr><td>Расположение (локация)</td><td>Страна, из которой сайты должны вас «видеть».</td></tr>
+    <tr><td>Трафик</td><td>От 1 ТБ в месяц. Обычно этого хватает с большим запасом.</td></tr>
+    <tr><td>Доступ</td><td>Пароль root или SSH-ключ. Если не знаете, что выбрать, — пароль.</td></tr>
+  </table>
+
+  <h3>Что такое «белый» IP и как его проверить</h3>
+  <p>Это адрес, по которому сервер доступен из любой точки интернета. Он нужен, чтобы ваш браузер мог к серверу подключиться и чтобы сервер получил сертификат шифрования. После создания сервера адрес показан в панели хостинга. Он <b>не</b> должен начинаться с <code>10.</code>, <code>192.168.</code>, <code>172.16.</code>–<code>172.31.</code> или <code>100.64.</code>–<code>100.127.</code>: такие адреса внутренние, снаружи они недоступны.</p>
+
+  <h3>Порты</h3>
+  <p>У некоторых хостингов в панели есть свой «Файрвол», «Сетевой экран» или «Группы безопасности». Если он есть, разрешите в нём <b>входящие TCP-подключения на порты 22, 80 и 443</b>. Порт 22 нужен для входа на сервер, 443 — для браузера, 80 — для продления сертификата раз в несколько дней. Если такого раздела нет, ничего делать не нужно.</p>
+
+  <div class="tip"><b>После оплаты запишите три вещи</b>
+    IP-адрес сервера (например <code>203.0.113.10</code>), имя пользователя (обычно <code>root</code>) и пароль. Хостинг присылает их на почту или показывает в панели.
+  </div>
+</section>
+
+<!-- ════════════════════ STEP 2 ════════════════════ -->
+<section class="chapter">
+  <div class="step-head">
+    <div class="step-no">2</div>
+    <div><h2>Подключиться к серверу</h2><div class="when">2 минуты</div></div>
+  </div>
+
+  <p>На сервер заходят через <b>SSH</b> — текстовое подключение из терминала. Ничего устанавливать не нужно: SSH уже есть в Windows 10/11, macOS и Linux.</p>
+
+  <div class="two">
+    <div class="card">
+      <h3>Windows</h3>
+      <p>Нажмите <span class="kbd">Win</span> и наберите <b>PowerShell</b> (или <b>Терминал</b>), откройте его.</p>
+    </div>
+    <div class="card">
+      <h3>macOS</h3>
+      <p>Нажмите <span class="kbd">⌘ Пробел</span> и наберите <b>Терминал</b>, откройте его.</p>
+    </div>
+  </div>
+
+  <p>Введите команду, подставив IP-адрес своего сервера, и нажмите <span class="kbd">Enter</span>:</p>
+  <div class="term"><span class="hl">ssh root@203.0.113.10</span></div>
+
+  <ol>
+    <li>При первом подключении терминал спросит, доверять ли серверу (<i>Are you sure you want to continue connecting</i>). Наберите <code>yes</code> и нажмите <span class="kbd">Enter</span>.</li>
+    <li>Введите пароль от сервера. <b>Символы при вводе не отображаются</b> — так и должно быть. Пароль можно вставить: <span class="kbd">Ctrl V</span> или правая кнопка мыши в Windows, <span class="kbd">⌘ V</span> в macOS. Затем нажмите <span class="kbd">Enter</span>.</li>
+    <li>Если всё получилось, вы увидите приветствие Ubuntu и строку вида <code>root@имя-сервера:~#</code>.</li>
+  </ol>
+
+  <div class="note"><b>Не получается подключиться?</b>
+    Почти у всех хостингов в панели есть кнопка «Консоль» («Console», «VNC»). Она открывает терминал сервера прямо в браузере. Войдите там под <code>root</code> с тем же паролем и переходите к шагу 3: дальше всё одинаково.
+  </div>
+</section>
+
+<!-- ════════════════════ STEP 3 ════════════════════ -->
+<section class="chapter">
+  <div class="step-head">
+    <div class="step-no">3</div>
+    <div><h2>Установить прокси одной командой</h2><div class="when">3 минуты, из них 2 — ожидание</div></div>
+  </div>
+
+  <p>Скопируйте обе строки целиком и вставьте в терминал сервера. Первая запоминает адрес загрузки, вторая скачивает и запускает установку:</p>
+  <div class="term"><span class="hl">u=https://github.com/orldev/Snail.Obscura.Proxy/releases/latest/download</span>
+<span class="hl">curl -fsSL $u/install-proxy.sh | sudo bash</span></div>
+
+  <p>Скрипт сам установит всё нужное: прокси, шифрование с сертификатом Let's Encrypt, защиту сервера. Логин и пароль для прокси он тоже придумает сам. В конце появится рамка со <b>строкой подключения</b>:</p>
+
+  <div class="term"><span class="c">▸ Пакеты
+▸ Внешний адрес: 203.0.113.10
+▸ squid: 127.0.0.1:8888, вход по паролю
+▸ stunnel: TLS на :443
+▸ Файрвол: снаружи открыты только SSH (22), 80 и 443
+▸ Сертификат Let's Encrypt на 203.0.113.10
+▸ Запуск
+▸ Проверка снаружи внутрь: https://203.0.113.10:443
+▸ Работает: без пароля 407, с паролем 204</span>
+
+════════════════════════════════════════════════════════
+ Готово. Строка подключения для Obscura:
+
+   <span class="hl">https://obscura:Xk3f9QmZ2wLp7Rt4Vb8Nc1Jd@203.0.113.10:443#NL</span>
+
+ Вставьте её в расширение: значок Obscura → Настройки → Импорт.
+ Показать ещё раз: sudo obscura-show
+════════════════════════════════════════════════════════</div>
+
+  <p><b>Скопируйте строку подключения</b>, которая начинается с <code>https://</code>: она понадобится на шаге 5. Выделите её мышью и нажмите <span class="kbd">Ctrl C</span> (в macOS <span class="kbd">⌘ C</span>). В PowerShell выделенный текст можно скопировать и правой кнопкой мыши. В конце строки стоит короткое имя сервера, по умолчанию это код страны (<b>NL</b>). Имя можно поменять в расширении.</p>
+
+  <div class="warn"><b>Строка подключения — это пароль</b>
+    В ней логин и пароль от вашего прокси. Кто получит строку, сможет ходить в интернет через ваш сервер. Не публикуйте её и не отправляйте в открытых чатах. Если строка потерялась, подключитесь к серверу и выполните <code>sudo obscura-show</code>.
+  </div>
+
+  <div class="keep">
+  <h3>Если что-то пошло не так</h3>
+  <table>
+    <tr><th>Сообщение</th><th>Что делать</th></tr>
+    <tr><td><code>sudo: command not found</code></td><td>Вы уже вошли как <code>root</code>. Во второй строке уберите слово <code>sudo</code>: <code>curl -fsSL $u/install-proxy.sh | bash</code></td></tr>
+    <tr><td><code>curl: command not found</code></td><td>Выполните <code>apt-get update &amp;&amp; apt-get install -y curl</code>, затем обе строки установки ещё раз.</td></tr>
+    <tr><td>Ошибка на шаге «Сертификат Let's Encrypt»</td><td>Чаще всего закрыт порт 80. Откройте порты 80 и 443 в панели хостинга (шаг 1, «Порты») и запустите установку ещё раз.</td></tr>
+    <tr><td>«Не удалось определить внешний IPv4»</td><td>У сервера нет публичного IPv4. Нужен другой тариф (шаг 1).</td></tr>
+    <tr><td>«Порт 443 занят»</td><td>На сервере уже работает сайт (traefik, nginx и т. п.). Поставьте прокси на другой порт — во второй строке: <code>curl -fsSL $u/install-proxy.sh | sudo env PROXY_PORT=8443 bash</code></td></tr>
+    <tr><td>«Порт 80 занят»</td><td>Порт 80 нужен Let's Encrypt для сертификата. На сервере с сайтом проще арендовать отдельный VPS под прокси: он стоит несколько долларов.</td></tr>
+  </table>
+  </div>
+  <p class="muted">Запускать установку повторно безопасно: она ничего не ломает, а логин и пароль остаются прежними.</p>
+</section>
+
+<!-- ════════════════════ STEP 4 ════════════════════ -->
+<section class="chapter">
+  <div class="step-head">
+    <div class="step-no">4</div>
+    <div><h2>Добавить расширение в Chrome</h2><div class="when">Один раз на компьютер · 3 минуты</div></div>
+  </div>
+
+  <p>Расширения нет в Chrome Web Store, поэтому оно устанавливается из папки. Это обычный способ для расширений с открытым кодом.</p>
+
+  <ol>
+    <li>Скачайте архив расширения:<br><code>github.com/orldev/Snail.Obscura.Proxy/releases/latest/download/obscura-extension.zip</code></li>
+    <li>Распакуйте архив в папку, которую не будете удалять, например <b>Документы → Obscura</b>. Chrome загружает расширение из этой папки при каждом запуске.</li>
+    <li>Откройте в Chrome адрес <code>chrome://extensions</code>: введите его в адресную строку и нажмите <span class="kbd">Enter</span>.</li>
+    <li>Включите <b>«Режим разработчика»</b> — переключатель справа вверху <b>(1)</b>.</li>
+    <li>Нажмите <b>«Загрузить распакованное расширение»</b> <b>(2)</b> и выберите распакованную папку: ту, в которой лежит файл <code>manifest.json</code>.</li>
+  </ol>
+
+  <figure data-shot="extensions">
+    <div class="frame"><img src="shots/extensions.png" alt="Страница chrome://extensions с включённым режимом разработчика"></div>
+    <figcaption>chrome://extensions: (1) режим разработчика, (2) загрузка распакованного расширения. После загрузки появится карточка Obscura.</figcaption>
+  </figure>
+
+  <ol start="6">
+    <li>Закрепите значок на панели: нажмите на значок пазла справа от адресной строки, затем на кнопку-булавку рядом с Obscura.</li>
+  </ol>
+
+  <div class="note"><b>Режим инкогнито</b>
+    Чтобы прокси работал и в окнах инкогнито, нажмите «Сведения» на карточке Obscura и включите «Разрешить в режиме инкогнито».
+  </div>
+</section>
+
+<!-- ════════════════════ STEP 5 ════════════════════ -->
+<section class="chapter">
+  <div class="step-head">
+    <div class="step-no">5</div>
+    <div><h2>Подключить сервер</h2><div class="when">1 минута</div></div>
+  </div>
+
+  <ol>
+    <li>Нажмите на значок Obscura, затем на «Настройки».</li>
+    <li>Найдите раздел <b>«Импорт»</b> и вставьте строку подключения из шага 3 <b>(1)</b>.</li>
+    <li>Нажмите <b>«Добавить из списка»</b> <b>(2)</b>.</li>
+  </ol>
+
+  <figure data-shot="import">
+    <div class="frame"><img src="shots/import.png" alt="Раздел «Импорт» со вставленной строкой подключения"></div>
+    <figcaption>Настройки → Импорт: вставленная строка подключения.</figcaption>
+  </figure>
+
+  <p>Расширение добавит сервер и запомнит логин и пароль как <b>общую учётную запись</b>: её используют все ваши серверы. Пароль хранится только в вашем браузере на этом компьютере.</p>
+
+  <figure class="w80" data-shot="imported">
+    <div class="frame"><img src="shots/imported.png" alt="Сервер добавлен, общая учётная запись заполнена"></div>
+    <figcaption>Сервер NL в списке, логин и пароль попали в «Общую учётную запись».</figcaption>
+  </figure>
+</section>
+
+<!-- ════════════════════ USAGE ════════════════════ -->
+<section class="chapter">
+  <h2>Как пользоваться</h2>
+  <div class="side" style="margin-top:16px">
+    <figure class="narrow" data-shot="popup">
+      <div class="frame"><img src="shots/popup.png" alt="Окно расширения: список серверов, включён NL"></div>
+      <figcaption>Включён сервер NL, выходной IP проверен.</figcaption>
+    </figure>
+    <div>
+      <p><b>Включить сервер</b> — нажмите на значок Obscura и выберите сервер по имени. Строка включённого сервера подсвечивается зелёным.</p>
+      <p><b>Проверить, что всё работает</b> — после выбора расширение само покажет внизу IP-адрес и страну, с которыми вас видят сайты. Должен быть адрес сервера, а не ваш домашний.</p>
+      <p><b>Выключить</b> — строка «Выключен»: Chrome снова ходит в интернет напрямую.</p>
+      <p><b>Значок</b> на панели показывает имя включённого сервера. Если на нём <b>!</b> — что-то не так, текст ошибки в окне расширения.</p>
+    </div>
+  </div>
+
+  <h3>Горячие клавиши</h3>
+  <table>
+    <tr><td><span class="kbd">Alt</span> + <span class="kbd">Shift</span> + <span class="kbd">P</span></td><td>Включить последний сервер или выключить прокси</td></tr>
+    <tr><td><span class="kbd">Alt</span> + <span class="kbd">Shift</span> + <span class="kbd">N</span></td><td>Следующий сервер по порядку списка</td></tr>
+  </table>
+  <p class="muted">Поменять сочетания можно на странице <code>chrome://extensions/shortcuts</code>.</p>
+
+  <h3>Несколько серверов</h3>
+  <p>Чтобы один логин и пароль подходили ко всем серверам, ставьте второй и следующие серверы с паролем первого. Пароль — часть строки подключения между <code>obscura:</code> и <code>@</code>.</p>
+  <div class="term"><span class="hl">u=https://github.com/orldev/Snail.Obscura.Proxy/releases/latest/download</span>
+<span class="hl">curl -fsSL $u/install-proxy.sh | sudo env PROXY_PASS=пароль-первого-сервера bash</span></div>
+  <p>Строки подключения этих серверов вставляйте в тот же «Импорт». Можно и несколько сразу, по одной на строку. Короткое имя, порядок в списке и адрес можно поменять в «Настройки → Серверы».</p>
+</section>
+
+<!-- ════════════════════ TROUBLESHOOTING ════════════════════ -->
+<section class="chapter">
+  <h2>Если что-то не работает</h2>
+  <table style="margin-top:14px">
+    <tr><th>Что видите</th><th>Что делать</th></tr>
+    <tr><td>На значке <b>!</b> и «сервер не принял логин или пароль»</td><td>Строка подключения вставлена с ошибкой или пароль на сервере сменился. Выполните на сервере <code>sudo obscura-show</code> и вставьте строку в «Импорт» заново. Если меняли пароль, перезапустите Chrome: принятый пароль он помнит до перезапуска.</td></tr>
+    <tr><td><code>ERR_PROXY_CONNECTION_FAILED</code> или «Нет ответа» при проверке IP</td><td>Сервер выключен или недоступен. Проверьте в панели хостинга, что сервер запущен и порт 443 открыт.</td></tr>
+    <tr><td><code>ERR_TUNNEL_CONNECTION_FAILED</code> на отдельных сайтах</td><td>Прокси пропускает только стандартные порты HTTPS (443 и 8443). Сайты на необычных портах через него не откроются: выключите прокси для них или добавьте их в «Настройки → Сеть».</td></tr>
+    <tr><td>«Прокси сейчас управляет другое расширение»</td><td>Отключите на <code>chrome://extensions</code> другие VPN- и прокси-расширения. Одновременно прокси может управлять только одно.</td></tr>
+    <tr><td>IP при проверке не изменился</td><td>Убедитесь, что в окне расширения выбран сервер, а не «Выключен». Проверьте, нет ли нужного сайта в «Настройки → Сеть → Напрямую».</td></tr>
+    <tr><td>Расширение пропало после перезапуска компьютера</td><td>Папка с расширением была удалена или перемещена. Распакуйте архив снова и повторите шаг 4.</td></tr>
+    <tr><td>Chrome предупреждает о расширениях в режиме разработчика</td><td>Это стандартное напоминание для расширений не из Web Store. Его можно закрыть.</td></tr>
+  </table>
+
+  <h3>Обслуживание сервера</h3>
+  <ul>
+    <li><b>Сертификат</b> продлевается сам примерно раз в три дня. Ничего делать не нужно, главное — не закрывать порт 80.</li>
+    <li><b>Обновления системы</b> — раз в месяц подключитесь к серверу и выполните <code>sudo apt update &amp;&amp; sudo apt upgrade -y</code>.</li>
+    <li><b>Новая версия прокси</b> — запустите команду установки из шага 3 ещё раз. Пароль сохранится.</li>
+    <li><b>Отказаться от сервера</b> — удалите его в панели хостинга, а в расширении — в «Настройки → Серверы».</li>
+  </ul>
+
+  <h3>Безопасность</h3>
+  <ul>
+    <li>Строка подключения и пароль — секрет. Пароль хранится на сервере (доступен только root) и в вашем браузере.</li>
+    <li>Сервер открыт снаружи только на портах 22, 80 и 443. Прокси без пароля не пускает никого.</li>
+    <li>Расширение не пускает видеозвонки (WebRTC) мимо прокси, чтобы сайты не узнали ваш настоящий IP.</li>
+    <li>Не давайте строку подключения другим людям: всё, что они сделают через сервер, будет сделано с вашего IP.</li>
+  </ul>
+</section>
+
+</body>
+</html>
