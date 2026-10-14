@@ -1,0 +1,42 @@
+body { width: 300px; }
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+header h1 { margin: 0; font-size: 15px; }
+
+.list { list-style: none; margin: 0; padding: 6px; }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid transparent;
+  background: none;
+  padding: 8px;
+  text-align: left;
+}
+.row:hover { background: var(--surface); border-color: transparent; }
+.row[aria-current='true'] { background: var(--accent-soft); }
+.row[aria-current='true'] .chip { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.row .address { margin-left: auto; }
+
+.notes { display: grid; gap: 6px; padding: 0 12px 8px; }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+footer .exit { min-width: 0; }
+footer .exit div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.empty { padding: 16px 12px; text-align: center; }
