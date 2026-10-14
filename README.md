@@ -1,115 +1,117 @@
 # Obscura
 
-Расширение Chrome для переключения своих прокси-серверов. У каждого сервера короткое имя (оно же на значке), а логин и пароль одни на все — меняется только IP.
+A Chrome extension for switching between your own proxy servers. Each server has a short name (also shown on the icon), and one login and password are shared by all of them — only the IP changes.
 
 ```
-браузер ──TLS:443──▶ stunnel ──▶ squid (логин/пароль) ──▶ сайт
+browser ──TLS:443──▶ stunnel ──▶ squid (login/password) ──▶ website
 ```
 
-Соединение с сервером зашифровано (https-прокси), поэтому пароль и адреса сайтов по дороге не видны. Сертификат Let's Encrypt выдаётся прямо на IP: домен не нужен.
+The connection to the server is encrypted (an https proxy), so the password and the addresses of the sites you visit are not visible along the way. The Let's Encrypt certificate is issued directly for the IP: no domain needed.
 
-## Быстрый старт
+The extension's interface is in Russian; Russian labels are given below in parentheses.
 
-Подробная инструкция с картинками: [obscura-guide.pdf](docs/obscura-guide.pdf).
+## Quick start
 
-**1. Сервер.** Арендуйте VPS на Ubuntu 24.04 с публичным IPv4. Зайдите на него по SSH и выполните:
+Step-by-step guide with screenshots: [obscura-guide.pdf](docs/obscura-guide.pdf).
+
+**1. Server.** Rent a VPS running Ubuntu 24.04 with a public IPv4 address. Log in over SSH and run:
 
 ```bash
 curl -fsSL https://github.com/orldev/Snail.Obscura.Proxy/releases/latest/download/install-proxy.sh | sudo bash
 ```
 
-Через пару минут скрипт напечатает строку подключения:
+After a couple of minutes the script prints a connection line:
 
 ```
 https://obscura:Xk3…@203.0.113.10:443#NL
 ```
 
-Логин и пароль скрипт придумывает сам и хранит только на сервере. Показать строку ещё раз можно командой `sudo obscura-show`.
+The script generates the login and password itself and keeps them only on the server. To show the line again, run `sudo obscura-show`.
 
-**2. Расширение.** Скачайте [obscura-extension.zip](https://github.com/orldev/Snail.Obscura.Proxy/releases/latest/download/obscura-extension.zip) и распакуйте. Откройте `chrome://extensions`, включите «Режим разработчика», нажмите «Загрузить распакованное расширение» и выберите распакованную папку.
+**2. Extension.** Download [obscura-extension.zip](https://github.com/orldev/Snail.Obscura.Proxy/releases/latest/download/obscura-extension.zip) and unpack it. Open `chrome://extensions`, turn on "Developer mode", click "Load unpacked" and select the unpacked folder.
 
-**3. Подключение.** Значок Obscura → Настройки → Импорт → вставьте строку → «Добавить из списка». Логин и пароль из строки станут общей учётной записью. Сервер выбирается в popup.
+**3. Connect.** Obscura icon → Settings (Настройки) → Import (Импорт) → paste the line → "Add from list" (Добавить из списка). The login and password from the line become the shared account. Pick a server in the popup.
 
-## Несколько серверов с одним паролем
+## Several servers with one password
 
-На втором и следующих серверах передайте пароль первого:
+On the second and every following server, pass the first server's password:
 
 ```bash
-curl -fsSL https://github.com/orldev/Snail.Obscura.Proxy/releases/latest/download/install-proxy.sh | sudo env PROXY_PASS=пароль-первого bash
+curl -fsSL https://github.com/orldev/Snail.Obscura.Proxy/releases/latest/download/install-proxy.sh | sudo env PROXY_PASS=first-server-password bash
 ```
 
-Если серверов много и к ним есть SSH-доступ с вашего компьютера, удобнее раскатка списком:
+If you have many servers and SSH access to them from your computer, deploying from a list is more convenient:
 
 ```bash
-cp server/servers.example.txt server/servers.txt   # «ИМЯ IP» по строке, файл не попадает в git
+cp server/servers.example.txt server/servers.txt   # "NAME IP" per line; the file is not tracked by git
 ./server/deploy.sh
 ```
 
-Скрипт поставит прокси на все машины с одним паролем и напечатает строки подключения. Повторный запуск без `PROXY_PASS` сменит пароль на всех серверах.
+The script installs the proxy on every machine with one password and prints the connection lines. Running it again without `PROXY_PASS` changes the password on all servers.
 
-## Что ставится на сервер
+## What gets installed on the server
 
 [server/install-proxy.sh](server/install-proxy.sh):
-- **squid** слушает только `127.0.0.1:8888` и требует пароль. Он не ведёт журнал запросов и не добавляет `Via` и `X-Forwarded-For`. Туннели разрешены только на порты 443 и 8443.
-- **stunnel** держит TLS на `:443` перед squid.
-- **certbot** (из snap, версия 5.3+) выпускает сертификат Let's Encrypt прямо на IP: домен не нужен. Сертификат живёт 6 дней и продлевается сам каждые ~3 дня. На время продления certbot ненадолго поднимает сервер на порту 80.
-- **nftables** открывает снаружи только SSH, 80 и 443. Если на машине уже есть чужие правила или включён ufw, скрипт их не ломает.
-- **Системный журнал** хранится только в памяти (отключается через `VOLATILE_LOGS=0`).
-- Логин и пароль лежат в `/etc/obscura/credentials` (права 0600, только root). Поэтому повторный запуск не меняет пароль и строка в браузере не ломается.
+- **squid** listens only on `127.0.0.1:8888` and requires a password. It keeps no request log and adds no `Via` or `X-Forwarded-For` headers. Tunnels are allowed only to ports 443 and 8443.
+- **stunnel** terminates TLS on `:443` in front of squid.
+- **certbot** (from snap, version 5.3+) issues a Let's Encrypt certificate directly for the IP: no domain needed. The certificate lives 6 days and renews itself every ~3 days. During renewal certbot briefly runs a server on port 80.
+- **nftables** opens only SSH, 80 and 443 to the outside. If the machine already has other rules or ufw is enabled, the script leaves them intact.
+- **The system journal** is kept in memory only (disable with `VOLATILE_LOGS=0`).
+- The login and password are stored in `/etc/obscura/credentials` (mode 0600, root only). That is why a repeated run does not change the password and the line in the browser keeps working.
 
-Переменные: `PROXY_USER`, `PROXY_PASS`, `NAME` (короткое имя, по умолчанию код страны IP), `PROXY_PORT` (по умолчанию 443), `STAGING=1` (тестовый сертификат), `TLS_CERT` и `TLS_KEY` (свой сертификат вместо Let's Encrypt). Подробнее — в начале скрипта.
+Variables: `PROXY_USER`, `PROXY_PASS`, `NAME` (short name, defaults to the IP's country code), `PROXY_PORT` (default 443), `STAGING=1` (test certificate), `TLS_CERT` and `TLS_KEY` (your own certificate instead of Let's Encrypt). See the top of the script for details.
 
-Если на сервере уже работает сайт (traefik, nginx), скрипт до любых изменений проверит порты. Занят 443 — прокси встанет на другой порт через `PROXY_PORT=8443`. Занят 80 — Let's Encrypt не сможет выдать сертификат на IP. Тогда нужен свой сертификат (`TLS_CERT`, `TLS_KEY`) или отдельный VPS под прокси.
+If the server already hosts a website (traefik, nginx), the script checks the ports before changing anything. If 443 is taken, put the proxy on another port with `PROXY_PORT=8443`. If 80 is taken, Let's Encrypt cannot issue a certificate for the IP. In that case you need your own certificate (`TLS_CERT`, `TLS_KEY`) or a separate VPS for the proxy.
 
-## Расширение
+## Extension
 
-| Где | Что |
+| Where | What |
 |---|---|
-| Popup | список серверов по коротким именам, «Выключен», проверка выходного IP и страны |
-| Значок | первые 4 символа имени включённого сервера; `!` — ошибка, её текст в popup |
-| `Alt+Shift+P` | последний сервер ↔ выключено |
-| `Alt+Shift+N` | следующий сервер по порядку списка |
+| Popup | server list by short name, "Off" (Выключен), exit IP and country check |
+| Icon | first 4 characters of the active server's name; `!` means an error, its text is in the popup |
+| `Alt+Shift+P` | last server ↔ off |
+| `Alt+Shift+N` | next server in list order |
 
-Чтобы прокси с паролем работал в режиме инкогнито, в карточке расширения включите «Разрешить в режиме инкогнито». Импорт понимает строки подключения, «ИМЯ IP», `адрес:порт:логин:пароль` и `http://логин:пароль@адрес:порт#ИМЯ`.
+For a password-protected proxy to work in Incognito, turn on "Allow in Incognito" on the extension's card. Import accepts connection lines, `NAME IP`, `host:port:login:password` and `http://login:password@host:port#NAME`.
 
-## Что видно и кому
+## Who sees what
 
-- **Сайты** видят IP сервера. WebRTC мимо прокси не пускается (настройка «Сеть»), DNS-запросы делает сервер, а не ваш компьютер.
-- **Провайдер** видит TLS-соединение с IP вашего сервера, но не видит сайты внутри.
-- **Хостер VPS** видит имена сайтов и объёмы трафика, а содержимое HTTPS-страниц не видит. Ему принадлежит машина: на ней нет ничего, кроме настроек прокси, и журнал запросов не ведётся.
-- **Пароли в расширении** лежат в профиле Chrome на этом компьютере без шифрования: так устроено хранилище расширений. В синхронизацию Google они не попадают.
+- **Websites** see the server's IP. WebRTC is not allowed to bypass the proxy (the Network (Сеть) setting), and DNS lookups are done by the server, not your computer.
+- **Your ISP** sees a TLS connection to your server's IP, but not the sites inside it.
+- **The VPS host** sees site names and traffic volume, but not the contents of HTTPS pages. The host owns the machine: it holds nothing but the proxy settings, and no request log is kept.
+- **Passwords in the extension** are stored unencrypted in the Chrome profile on this computer: that is how extension storage works. They are not synced to Google.
 
-## Ограничения Chrome
+## Chrome limitations
 
-- SOCKS5 с паролем Chrome не поддерживает. Для прокси с паролем годятся только https и http.
-- Принятый пароль Chrome запоминает до перезапуска. Если сменить пароль на серверах, перезапустите браузер.
+- Chrome does not support SOCKS5 with a password. Only https and http work for password-protected proxies.
+- Chrome remembers an accepted password until restart. If you change the password on the servers, restart the browser.
 
-## Разработка
+## Development
 
-Нужен Node.js 24.
+Requires Node.js 24.
 
 ```bash
-npm run dev          # сборка WXT с перезагрузкой на лету
-npm run compile      # проверка типов
-npm test             # юнит-тесты (vitest)
-npm run test:e2e     # Chromium + локальные прокси с паролем
+npm run dev          # WXT build with hot reload
+npm run compile      # type check
+npm test             # unit tests (vitest)
+npm run test:e2e     # Chromium + local password-protected proxies
 ```
 
-Проверка настоящего сервера тем же Chromium, по строке подключения:
+Testing a real server with the same Chromium, using its connection line:
 
 ```bash
 OBSCURA_LINE="$(ssh root@203.0.113.10 obscura-show)" npm run test:e2e
 ```
 
-Выпуск версии: поднять `version` в package.json, затем `git tag v0.2.0 && git push --tags`. GitHub Actions соберёт релиз с `obscura-extension.zip`, `install-proxy.sh` и `obscura-guide.pdf`.
+Releasing a version: bump `version` in package.json, then `git tag v0.2.0 && git push --tags`. GitHub Actions builds a release with `obscura-extension.zip`, `install-proxy.sh` and `obscura-guide.pdf`.
 
-Структура:
-- `src/entrypoints/background.ts` — применение прокси, ответ на запрос пароля, ошибки, значок, горячие клавиши
-- `src/entrypoints/popup`, `src/entrypoints/options` — интерфейс без фреймворка
-- `src/shared` — модель, разбор списка, хранилище
-- `server/` — установка и раскатка
-- `docs/` — PDF-инструкция и её исходник
+Layout:
+- `src/entrypoints/background.ts` — applying the proxy, answering password prompts, errors, icon, keyboard shortcuts
+- `src/entrypoints/popup`, `src/entrypoints/options` — framework-free UI
+- `src/shared` — model, list parsing, storage
+- `server/` — installation and deployment
+- `docs/` — the PDF guide and its source
 
-## Лицензия
+## License
 
 [MIT](LICENSE).
