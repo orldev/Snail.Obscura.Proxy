@@ -1,0 +1,39 @@
+name: Release
+
+# Tag vX.Y.Z → a release with files under fixed names, so that the links
+# https://github.com/<owner>/<repo>/releases/latest/download/<file>
+# in the guide always point to the latest version.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Tag matches package.json version
+        run: |
+          expected="v$(node -p 'require("./package.json").version')"
+          [ "$GITHUB_REF_NAME" = "$expected" ] || { echo "Tag is $GITHUB_REF_NAME but package.json says $expected"; exit 1; }
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
+      - run: shellcheck server/install-proxy.sh server/deploy.sh
+      - run: npm run zip
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp .output/*-chrome.zip obscura-extension.zip
+          cp docs/obscura-guide.pdf obscura-guide.pdf
+          gh release create "$GITHUB_REF_NAME" \
+            obscura-extension.zip server/install-proxy.sh obscura-guide.pdf \
+            --title "Obscura $GITHUB_REF_NAME" --generate-notes
