@@ -1,0 +1,7 @@
+node_modules/
+.output/
+.wxt/
+*.log
+.DS_Store
+server/servers.txt
+docs/guide/shots/

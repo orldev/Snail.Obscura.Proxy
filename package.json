@@ -1,0 +1,29 @@
+{
+  "name": "snail-obscura-proxy",
+  "description": "Переключатель своих прокси-серверов для Chrome",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "compile": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "wxt build && node --test e2e/*.test.mjs",
+    "postinstall": "wxt prepare",
+    "guide": "wxt build && node docs/guide/build.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.3.5",
+    "playwright": "1.63.0",
+    "typescript": "~5.9",
+    "vitest": "^5.0.4",
+    "wxt": "^0.21.4"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orldev/Snail.Obscura.Proxy.git"
+  }
+}
